@@ -48,7 +48,7 @@ computed once and B(fs8) = fs8 * B_1 is reused at every MCMC step.
 
 ## Setup
 
-    cd third_party && git clone https://github.com/corentinravoux/flip.git
+    mkdir -p third_party && cd third_party && git clone https://github.com/corentinravoux/flip.git && cd ..
     pip install -r requirements.txt     # FLIP is imported from third_party, no install
 
 ## Run

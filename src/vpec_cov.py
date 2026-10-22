@@ -61,6 +61,11 @@ def comoving_distance_mpc_h(zcmb, om=0.3, n_grid=4000):
 
 def _import_flip(flip_dir=FLIP_DIR):
     os.environ.setdefault("FLIP_USE_JAX", "0")
+    if not os.path.isdir(os.path.join(flip_dir, "flip")):
+        raise ImportError(
+            f"FLIP not found in {os.path.abspath(flip_dir)}. Run: mkdir -p third_party && "
+            "cd third_party && git clone https://github.com/corentinravoux/flip.git"
+        )
     if flip_dir not in sys.path:
         sys.path.insert(0, flip_dir)
     from flip.covariance import covariance  # noqa: E402
