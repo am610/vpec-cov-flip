@@ -1,0 +1,87 @@
+VPEC_COV: main findings (last updated 2026-10-22)
+
+Goal
+  Put the correlated peculiar-velocity covariance from FLIP (arXiv:2501.16852)
+  into the factorized form C = D + B B^T (D diagonal, B is N x K) used by SNANA
+  PR #1797, so the likelihood is solved with the Woodbury identity instead of an
+  N x N Cholesky.
+
+Caveat
+  All numbers come from a synthetic sample (uniform on the sky, 0.02 < z < 0.10)
+  with the power spectrum bundled with FLIP. They show the method and are not a
+  forecast. Accuracy was tested at N=1500 only. Timing was tested up to N=20000
+  with random B (shapes only).
+
+1. The FLIP velocity covariance is not low-rank
+   Modes needed for a fraction of the variance (script 02):
+        N     K90    K99   K99.9
+       250     88    202     236
+      1000    166    617     860
+      4000    213   1385    2830
+     10000    232   1831    5414
+   K90 stays near 230. K99 and K99.9 keep growing, but slower than N
+   (K99/N = 0.18 at N=10^4).
+   Corentin's numbers (500 to 700 modes for 99% at N=2500, ZTF) are the same
+   order as ours (1211 at N=3000).
+
+2. How to build B
+   eig    top-K eigenmodes. Needs a full eigendecomposition.
+   rsvd   randomized range finder on C (about 4 products C @ [N x K]).
+          Matches eig without the eigendecomposition.
+   mc     K random draws x ~ N(0, C), B = [x_1 ... x_K] / sqrt(K).
+          This is the random-realization scheme proposed by Rick Kessler.
+   Remainder correction: add diag(C - B B^T) back into D. It removes most of the
+   log|C| bias (about -12 at K=200 without it, about -0.2 with it).
+
+3. Accuracy on fs8 (script 03, N=1500, 30 mock residuals)
+   Shift of the fitted fs8 relative to the dense fit, in units of sigma_fs8
+   (rms, with remainder correction):
+        method     K=100   K=200   K=400
+        eig         0.21    0.11    0.04
+        rsvd        0.24    0.11    0.07
+        mc          1.11    0.69    0.52
+   eig and rsvd: no mean shift. mc: mean shift of -1.0, -0.6, -0.4 sigma at
+   K=100, 200, 400. The sign and size are the same for different random seeds
+   (8 seeds tested at each K), so the mc bias is systematic and not sampling
+   noise.
+
+4. Time per likelihood evaluation (script 04, 8 threads)
+        N      K    dense      woodbury    cached
+      2000    200    31 ms      2.7 ms      0.30 ms
+      5000    200   482 ms      6.7 ms      0.38 ms
+     10000    200   2.4 s       13 ms       0.35 ms    (183x and 6940x)
+     10000    400   2.5 s       27 ms       1.1 ms     (92x and 2190x)
+     20000    200   13 s        52 ms       0.27 ms    (261x and 49700x)
+   woodbury: FactorizedCovariance rebuilt every call (needed if D changes, for
+             example sigv free or an fs8-dependent remainder term).
+   cached:   B^T D^-1 B computed once (valid when D is fixed and fs8 only
+             rescales B).
+   Below N of about 2000 a dense Cholesky takes a few ms, so there is no gain.
+   Timings vary by tens of percent between runs. Read the speedups as orders of
+   magnitude.
+
+5. Consequences
+   - Corentin's pipeline (N about 2500) will probably not gain from Woodbury.
+   - The gain is for LSST-like N (several thousand and above).
+   - For SNANA: use rsvd or eig plus the remainder correction. Random
+     realizations need a larger K or a bias correction before use.
+   - rsvd needs the dense covariance in memory (0.8 GB at N=10^4).
+
+Open questions
+   1. Accuracy at N above 5000, with the production power spectrum and the real
+      sample geometry, and for w0, wa instead of fs8.
+   2. Can the mc bias be corrected, or should SNANA use rsvd?
+   3. How should D and the remainder term be handled when sigv is fitted?
+   4. Impact on the w0, wa FoM for the M25 and K25 samples (archived outputs).
+
+Status
+   The forecast project (re-analysis of M25 and K25 with cov(vpec)) has not been
+   started. Corentin asked that it wait for discussion in the PV team and
+   DESC-TD. This directory is outside SNANA and is not shared yet.
+
+Where things are
+   README.md                                   setup and usage
+   notebooks/vpec_cov_flip_woodbury.ipynb      walkthrough with plots
+   scripts/01 to 04                            the four experiments
+   outputs/*.csv, outputs/*.pdf                numbers and figures
+   Symlink: /pscratch/sd/a/ayanmitr/VPEC_COV
