@@ -84,4 +84,3 @@ Where things are
    notebooks/vpec_cov_flip_woodbury.ipynb      walkthrough with plots
    scripts/01 to 04                            the four experiments
    outputs/*.csv, outputs/*.pdf                numbers and figures
-   Symlink: /pscratch/sd/a/ayanmitr/VPEC_COV

@@ -1,5 +1,7 @@
 # VPEC_COV: peculiar-velocity covariance for SN cosmology in factorized form
 
+Quick start: clone FLIP into `third_party/` (see Setup), then open `notebooks/vpec_cov_flip_woodbury.ipynb`, or run `python scripts/01_vpec_woodbury_demo.py`. Numbers and conclusions are summarized in `FINDINGS.txt`.
+
 Prototype for including the correlated peculiar-velocity covariance cov(vpec)
 in SNANA-style SN analyses, using FLIP for the covariance and the factorized
 (Woodbury) likelihood from SNANA PR #1797 for the solve.
@@ -36,7 +38,7 @@ computed once and B(fs8) = fs8 * B_1 is reused at every MCMC step.
 
     notebooks/vpec_cov_flip_woodbury.ipynb   walkthrough with plots (start here)
     src/vpec_cov.py                FITRES reader, FLIP call, B builders, likelihood helpers
-    src/factorized_likelihood.py   Woodbury likelihood (copied from Factorized_Covariance/src)
+    src/factorized_likelihood.py   Woodbury likelihood (copied from the factorized-covariance prototype)
     scripts/01_vpec_woodbury_demo.py   K convergence of chi2, log|C| and the fs8 profile
     scripts/02_rank_vs_N.py            modes needed versus sample size
     scripts/03_diag_correction.py      fs8 bias of eig, rsvd, mc with and without remainder term
@@ -102,6 +104,12 @@ B. Below N of about 2000 a dense Cholesky is already fast, so the gain is for la
    use rsvd (needs the dense covariance in memory, 0.8 GB at N=10^4).
 3. How D and the remainder term should be handled when sigv is fitted.
 4. Impact on the w0, wa FoM for the M25 and K25 samples, using archived outputs.
+
+## Credits
+
+- FLIP is developed by C. Ravoux, B. Carreres and collaborators (MIT license). This repository only calls it and does not include it.
+- The random-realization construction of B was proposed by R. Kessler.
+- The Woodbury likelihood follows the factorized-covariance implementation in SNANA (PR #1797).
 
 ## References
 
