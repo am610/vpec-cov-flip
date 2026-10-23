@@ -85,6 +85,10 @@ statistical error, solid = with remainder correction):
   K=200 and no bias. The log|C| error drops from about -12 to about -0.2 at K=200.
 - Random realizations (mc) are biased low in fs8 at these K. The sign and size
   are the same for different seeds, so it is systematic, not sampling noise.
+- Each realization is weighted 1/K (B = [x_1 ... x_K] / sqrt(K), so E[B B^T] = C),
+  so the covariance estimate is unbiased. The bias comes from the likelihood being
+  nonlinear in C (C^-1 and log|C|): C is not low-rank, a rank-K sample covariance
+  is noisy, and the noise becomes a systematic bias. It falls only about as 1/K.
 
 Cost per likelihood evaluation, 8 threads (script 04):
 

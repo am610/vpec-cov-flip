@@ -45,6 +45,23 @@ Caveat
    (8 seeds tested at each K), so the mc bias is systematic and not sampling
    noise.
 
+   Why mc is biased even though every realization is weighted 1/K
+   (question raised by a reader: "is the fs8 bias 1 sigma at K=100, and did
+   each realization get weight 1/K?")
+   - Yes. B = [x_1 ... x_K] / sqrt(K), so B B^T = (1/K) sum_k x_k x_k^T and
+     E[B B^T] = C. The covariance estimate is unbiased
+     (src/vpec_cov.py, monte_carlo_B).
+   - The likelihood needs C^-1 and log|C|, which are nonlinear in C. C is not
+     low-rank (point 1: K99 is several hundred to over a thousand), so a
+     rank-100 sample covariance is very noisy, and that noise becomes a
+     systematic bias in C^-1 and log|C| (Wishart-type effect, as for any
+     inverted sample covariance).
+   - The remainder correction fixes the diagonal and most of the log|C|
+     offset, but not the noise in the off-diagonal terms.
+   - The bias falls only slowly with K (about 1/K), so mc would need K in the
+     thousands, which removes the speed gain. eig and rsvd capture the
+     dominant modes directly: about 0.2 sigma at K=100, no mean shift.
+
 4. Time per likelihood evaluation (script 04, 8 threads)
         N      K    dense      woodbury    cached
       2000    200    31 ms      2.7 ms      0.30 ms
